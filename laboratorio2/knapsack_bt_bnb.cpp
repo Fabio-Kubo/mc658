@@ -4,6 +4,39 @@
  * PED: Edson Ticona Zegarra
  ******************************************************/
 #include "knapsack.h"
+#include <algorithm>
+
+struct cliente{
+	int id,
+	int classe,
+	int larguraBanda,
+	int pagamento,
+	float pagamentoPorLargura
+};
+
+void carregarClientes(vector<int> &p, vector<int> &w, vector<int> &c, vector<cliente> &clientes){
+	int i;
+	for(i=0; i<clientes.size(); i++) {
+		cliente novoCliente;
+		novoCliente[i].id = i;
+		novoCliente[i].classe = c[i];
+		novoCliente[i].pagamento = p[i];
+		novoCliente[i].larguraBanda = w[i];
+		novoCliente[i].pagamentoPorLargura = (float)novoCliente[i].pagamento/(float)novoCliente[i].larguraBanda;
+		clientes.push_back(novoCliente);
+	}
+}
+
+bool comparaPorLarguraBanda(const cliente &a, const cliente &b){
+    return a.larguraBanda < b.larguraBanda;
+}
+
+bool comparaPorPrecoLarguraBanda(const cliente &a, const cliente &b){
+    return a.pagamentoPorLargura > b.pagamentoPorLargura;
+}
+
+int timeout_limit;
+clock_t begin_clock;
 
 void backtracking(int qtdPessoas, int larguraBandaDivisor, int larguraBandaTotal,
 	vector<int> &p, vector<int> &w, vector<int> &c, int iPessoa, int larguraBandaAcumulada,
@@ -45,10 +78,24 @@ void backtracking(int qtdPessoas, int larguraBandaDivisor, int larguraBandaTotal
 			}
 		}
 	}
+
+	// exit the code because of timeout
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin_clock) / CLOCKS_PER_SEC;
+	if (elapsed_secs > timeout_limit) {
+		throw elapsed_secs;
+}
 }
 
 void branchAndBound(int qtdPessoas, int larguraBandaDivisor, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol){
 
+
+	// exit the code because of timeout
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin_clock) / CLOCKS_PER_SEC;
+	if (elapsed_secs > timeout_limit) {
+		throw elapsed_secs;
+	}
 }
 
 
@@ -59,13 +106,24 @@ void branchAndBound(int qtdPessoas, int larguraBandaDivisor, int B, vector<int> 
 ///Tries to find the most valuable solution. This function stops branching if the actual branch
 // finds its maximum possible value.
 bool bt(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol, int t){
-
 	vector<int> aux(n, 0);
+
+	// start clock
+	begin_clock = clock();
+	timeout_limit = t;
+
 	//inicializa o vector de solucao
 	sol.swap(aux);
 
-	// fazer quicksort ordenando crescentemente na largura de banda
-	backtracking(0, 0, B, 0, 0, sol, sol);
+	// quicksort ordenando crescentemente na largura de banda
+	std::sort(info.begin(), info.end(), comparaPorLarguraBanda);
+
+	try{
+		backtracking(0, 0, B, 0, 0, sol, sol);
+	} catch (double timeout) {
+		passed = false;
+		printf("timeout\n");
+	}
 	return true;
 }
 
@@ -74,10 +132,23 @@ bool bt(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vec
 ///
 bool bnb(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol, int t){
 
+	// start clock
+	begin_clock = clock();
+	timeout_limit = t;
+
 	//inicializa o vector de solucao
 	vector<int> aux(n, 0);
 	sol.swap(aux);
-	// fazer quicksort ordenando decrescentemente na divisao lucro/larguraBanda.
+
+	// quicksort ordenando decrescentemente por pagamento/larguraBanda.
+	std::sort(info.begin(), info.end(), comparaPorPrecoLarguraBanda);
+
+	try{
+			//TODO chamar branchandBound
+	} catch (double timeout) {
+		passed = false;
+		printf("timeout\n");
+	}
 
 	return false;
 }
