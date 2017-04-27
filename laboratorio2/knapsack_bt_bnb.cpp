@@ -3,6 +3,10 @@
  * Prof: Flavio Keidi Miyazawa
  * PED: Edson Ticona Zegarra
  ******************************************************/
+
+ // Nome1: Fabio Tadashi Kaneiwa Kubo
+ // RA1: 145979
+
 #include "knapsack.h"
 #include <algorithm>
 
@@ -102,7 +106,6 @@ void backtracking(vector<usuario> &usuarios, vector<int> classesUtilizadas, int 
 
 void branchAndBound(int qtdPessoas, int larguraBandaDivisor, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol){
 
-
 	// exit the code because of timeout
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin_clock) / CLOCKS_PER_SEC;
@@ -111,30 +114,28 @@ void branchAndBound(int qtdPessoas, int larguraBandaDivisor, int B, vector<int> 
 	}
 }
 
-
-
-// Nome1: Fabio Tadashi Kaneiwa Kubo
-// RA1: 145979
 // Bactracking function:
 ///Tries to find the most valuable solution. This function stops branching if the actual branch
 // finds its maximum possible value.
 bool bt(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol, int t){
-	vector<int> aux(n, 0);
+	vector<int> solucaoAtual(n, 0);
+	vector<int> solucaoOtima(n, 0);
 	vector<usuario> usuarios;
+	vector<int> classesUtilizadas;
+	bool passed = true;
 
 	// start clock
 	begin_clock = clock();
 	timeout_limit = t;
-
-	//inicializa o vector de solucao
-	sol.swap(aux);
 
 	//carrega os usuarios e ordena crescentemente de acordo com a largura de banda
 	carregarUsuarios(n, p, w, c, usuarios);
 	std::sort(usuarios.begin(), usuarios.end(), comparaPorLarguraBanda);
 
 	try{
-		backtracking(0, 0, B, 0, 0, sol, sol);
+		backtracking(usuarios, classesUtilizadas, 0, d, B, 0, 0, -1, solucaoAtual, solucaoOtima);
+	 	//inicializa o vector de solucao
+		sol.swap(solucaoOtima);
 	} catch (double timeout) {
 		passed = false;
 		printf("timeout\n");
@@ -146,27 +147,27 @@ bool bt(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vec
 // Branch and Bound function
 ///
 bool bnb(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol, int t){
-	vector<int> aux(n, 0);
+	vector<int> solucaoAtual(n, 0);
+	vector<int> solucaoOtima(n, 0);
 	vector<usuario> usuarios;
+	vector<int> classesUtilizadas;
+	bool passed = true;
 
 	// start clock
 	begin_clock = clock();
 	timeout_limit = t;
 
-	//inicializa o vector de solucao
-	vector<int> aux(n, 0);
-	sol.swap(aux);
-
-	//carrega os usuarios e ordena decrescentemente de acordo com o pagamento/larguraBanda
+	//carrega os usuarios e ordena crescentemente de acordo com a largura de banda
 	carregarUsuarios(n, p, w, c, usuarios);
-	std::sort(usuarios.begin(), usuarios.end(), comparaPorPrecoLarguraBanda);
+	std::sort(usuarios.begin(), usuarios.end(), comparaPorLarguraBanda);
 
 	try{
-			//TODO chamar branchandBound
+
+		//inicializa o vector de solucao
+		sol.swap(solucaoOtima);
 	} catch (double timeout) {
 		passed = false;
 		printf("timeout\n");
 	}
-
-	return false;
+	return true;
 }
