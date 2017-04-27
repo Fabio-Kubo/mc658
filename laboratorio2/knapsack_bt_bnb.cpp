@@ -9,6 +9,7 @@
 
 #include "knapsack.h"
 #include <algorithm>
+#include <math.h>
 
 struct usuario{
 	int id;
@@ -68,31 +69,21 @@ void backtracking(vector<usuario> &usuarios, vector<int> classesUtilizadas, int 
 	else{
 
 		//se for nova classe, adiciona-se o divisor
-		if(ehClasseDiferente(classesUtilizadas, usuarios[indice].classe)){
+		if(ehClasseDiferente(classesUtilizadas, usuarios[indice].classe))
 			usuarios[indice].larguraBanda = usuarios[indice].larguraBanda + larguraBandaDivisor;
-		}
 
-		//caso a largura de banda acumulada somada a atual ultrapasse o limite
-		if(larguraBandaAcumulada + usuarios[indice].larguraBanda > larguraBandaTotal){
-			if(pagamentoOtimo < pagamentosAcumulados){
-				solucaoOtima.swap(solucaoAtual);
-			}
-		}
-		else{
+		//chamada sem adicionar o item atual
+		solucaoAtual[usuarios[indice].id] = 0;
+		backtracking(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
+			 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima);
 
-			//chamada sem adicionar o item atual
-			solucaoAtual[usuarios[indice].id] = 0;
-			backtracking(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
-				 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima);
+		//verifica se da pra adicionar o atual com o divisor
+		if(larguraBandaAcumulada + usuarios[indice].larguraBanda <= larguraBandaTotal){
+			//chamada adicionando o item atual
+			solucaoAtual[usuarios[indice].id] = 1;
 
-			//verifica se da pra adicionar o atual com o divisor
-			if(larguraBandaAcumulada + usuarios[indice].larguraBanda <= larguraBandaTotal){
-				//chamada adicionando o item atual
-				solucaoAtual[usuarios[indice].id] = 1;
-
-				backtracking(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada + usuarios[indice].larguraBanda,
-					 pagamentosAcumulados + usuarios[indice].pagamento, pagamentoOtimo, solucaoAtual, solucaoOtima);
-			}
+			backtracking(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada + usuarios[indice].larguraBanda,
+		 	pagamentosAcumulados + usuarios[indice].pagamento, pagamentoOtimo, solucaoAtual, solucaoOtima);
 		}
 	}
 
@@ -104,7 +95,49 @@ void backtracking(vector<usuario> &usuarios, vector<int> classesUtilizadas, int 
 	}
 }
 
-void branchAndBound(int qtdPessoas, int larguraBandaDivisor, int B, vector<int> &p, vector<int> &w, vector<int> &c, vector<int> &sol){
+void branchAndBound(vector<usuario> &usuarios, vector<int> classesUtilizadas, int indice, int larguraBandaDivisor, int larguraBandaTotal, int larguraBandaAcumulada,
+	 int pagamentosAcumulados, int pagamentoOtimo, vector<int> solucaoAtual, vector<int> &solucaoOtima){
+	int pagamentoMaximoBranch;
+
+	//caso tenha percorrido todas as  pessoas
+	if(indice == usuarios.size()){
+		if(pagamentoOtimo < pagamentosAcumulados){
+			solucaoOtima.swap(solucaoAtual);
+		}
+	}
+	else{
+
+		//se for nova classe, adiciona-se o divisor
+		if(ehClasseDiferente(classesUtilizadas, usuarios[indice].classe))
+			usuarios[indice].larguraBanda = usuarios[indice].larguraBanda + larguraBandaDivisor;
+
+		//chamada sem adicionar o item atual
+		solucaoAtual[usuarios[indice].id] = 0;
+		backtracking(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
+			 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima);
+
+		//verifica se da pra adicionar o atual
+		if(larguraBandaAcumulada + usuarios[indice].larguraBanda <= larguraBandaTotal){
+			//chamada adicionando o item atual
+			solucaoAtual[usuarios[indice].id] = 1;
+			indice++;
+			larguraBandaAcumulada += usuarios[indice].larguraBanda;
+			pagamentosAcumulados += usuarios[indice].pagamento;
+
+			//se n for o ultimo
+			if(indice < usuarios.size()){
+					pagamentoMaximoBranch = (larguraBandaTotal - larguraBandaAcumulada) * ceil(usuarios[indice].pagamentoPorLargura);
+
+					if(pagamentoOtimo < pagamentosAcumulados + pagamentoMaximoBranch){
+						backtracking(usuarios, classesUtilizadas, indice, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
+							 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima);
+					}
+			}
+			else if(pagamentoOtimo < pagamentosAcumulados){
+					solucaoOtima.swap(solucaoAtual);
+			}
+		}
+	}
 
 	// exit the code because of timeout
 	clock_t end = clock();
