@@ -41,10 +41,6 @@ void carregarUsuarios(int n, vector<int> &p, vector<int> &w, vector<int> &c, vec
 	}
 }
 
-bool comparaPorLarguraBanda(const usuario &a, const usuario &b){
-    return a.larguraBanda < b.larguraBanda;
-}
-
 bool comparaPorPrecoLarguraBanda(const usuario &a, const usuario &b){
     return b.pagamentoPorLargura < a.pagamentoPorLargura;
 }
@@ -94,50 +90,41 @@ void branchAndBound(vector<usuario> &usuarios, vector<bool> classesUtilizadas, i
 	 int pagamentosAcumulados, int &pagamentoOtimo, vector<int> solucaoAtual, vector<int> &solucaoOtima, bool ehPrimeiraClasse){
 	int pagamentoMaximoBranch, auxLarguraBandaAtual;
 
-	//caso tenha percorrido todas as  pessoas
-	if(indice == usuarios.size()){
+	if(larguraBandaAcumulada > larguraBandaTotal)
+		return;
+
 		if(pagamentoOtimo < pagamentosAcumulados){
 			solucaoOtima.swap(solucaoAtual);
 			pagamentoOtimo = pagamentosAcumulados;
 		}
-	}
-	else{
 
-		//chamada sem adicionar o item atual
-		solucaoAtual[usuarios[indice].id] = 0;
-		branchAndBound(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
-			 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima, ehPrimeiraClasse);
+	//caso tenha percorrido todas as  pessoas
+	if(indice == usuarios.size())
+			return;
 
-		 //se for n for primeira classe e for uma nova classe, adiciona-se o divisor
-		 auxLarguraBandaAtual = usuarios[indice].larguraBanda;
- 		if(!ehPrimeiraClasse && !classesUtilizadas[usuarios[indice].classe])
- 			auxLarguraBandaAtual += larguraBandaDivisor;
+	//chamada sem adicionar o item atual
+	solucaoAtual[usuarios[indice].id] = 0;
+	branchAndBound(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
+		 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima, ehPrimeiraClasse);
 
-		//verifica se da pra adicionar o atual
-		if(larguraBandaAcumulada + usuarios[indice].larguraBanda <= larguraBandaTotal){
-			//chamada adicionando o item atual
+	 //se for n for primeira classe e for uma nova classe, adiciona-se o divisor
+	 auxLarguraBandaAtual = usuarios[indice].larguraBanda;
+		if(!ehPrimeiraClasse && !classesUtilizadas[usuarios[indice].classe])
+			auxLarguraBandaAtual += larguraBandaDivisor;
+
+		pagamentoMaximoBranch = (larguraBandaTotal - larguraBandaAcumulada) * usuarios[indice].pagamentoPorLargura;
+
+		if(pagamentoOtimo + 1 <=pagamentosAcumulados + pagamentoMaximoBranch){
+
 			solucaoAtual[usuarios[indice].id] = 1;
 			classesUtilizadas[usuarios[indice].classe] = true;
 			larguraBandaAcumulada += auxLarguraBandaAtual;
 			pagamentosAcumulados += usuarios[indice].pagamento;
 
-			indice++;
-			//se n for o ultimo
-			if(indice < usuarios.size()){
-
-					pagamentoMaximoBranch = (larguraBandaTotal - larguraBandaAcumulada) * ceil(usuarios[indice].pagamentoPorLargura);
-
-					if(pagamentoOtimo <= pagamentosAcumulados + pagamentoMaximoBranch){
-						branchAndBound(usuarios, classesUtilizadas, indice, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
-							 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima, false);
-					}
-			}
-			else if(pagamentoOtimo < pagamentosAcumulados){
-					solucaoOtima.swap(solucaoAtual);
-					pagamentoOtimo = pagamentosAcumulados;
-			}
+			branchAndBound(usuarios, classesUtilizadas, indice + 1, larguraBandaDivisor, larguraBandaTotal, larguraBandaAcumulada,
+				 pagamentosAcumulados, pagamentoOtimo, solucaoAtual, solucaoOtima, false);
 		}
-	}
+
 
 	// exit the code because of timeout
 	clock_t end = clock();
@@ -168,7 +155,7 @@ bool bt(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vec
 
 	vector<bool> classesUtilizadas(maiorClasse, false);
 
-	std::sort(usuarios.begin(), usuarios.end(), comparaPorLarguraBanda);
+	std::sort(usuarios.begin(), usuarios.end(), comparaPorPrecoLarguraBanda);
 
 	try{
 		backtracking(usuarios, classesUtilizadas, 0, d, B, 0, 0, pagamentoOtimo, solucaoAtual, solucaoOtima, true);
@@ -209,7 +196,7 @@ bool bnb(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, ve
 
 	vector<bool> classesUtilizadas(maiorClasse, false);
 
-	std::sort(usuarios.begin(), usuarios.end(), comparaPorLarguraBanda);
+	std::sort(usuarios.begin(), usuarios.end(), comparaPorPrecoLarguraBanda);
 
 	try{
 		branchAndBound(usuarios, classesUtilizadas, 0, d, B, 0,0, pagamentoOtimo,
