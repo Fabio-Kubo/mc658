@@ -170,8 +170,9 @@ bool bt(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, vec
 
 	} catch (double timeout) {
 		passed = false;
+		printf("timeout:\n");
 		printf("solucao ate o momento: %d\n", pagamentoOtimo);
-		printf("timeout\n");
+		printf("tempo: %f\n", timeout);
 	}
 	return true;
 }
@@ -191,7 +192,7 @@ bool bnb(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, ve
 	begin_clock = clock();
 	timeout_limit = t;
 
-	//carrega os usuarios e ordena crescentemente de acordo com a largura de banda
+	//carrega os usuarios e ordena crescentemente de acordo com a preco por largura de banda
 	carregarUsuarios(n, p, w, c, usuarios, maiorClasse);
 
 	vector<bool> classesUtilizadas(maiorClasse, false);
@@ -214,6 +215,7 @@ bool bnb(int n, int d, int B, vector<int> &p, vector<int> &w, vector<int> &c, ve
 		passed = false;
 		printf("timeout\n");
 		printf("solucao ate o momento: %d\n", pagamentoOtimo);
+		printf("tempo: %f\n", timeout);
 	}
 	return true;
 }
